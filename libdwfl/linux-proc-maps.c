@@ -43,6 +43,7 @@
 
 
 #define PROCMAPSFMT	"/proc/%d/maps"
+#define PROCMAPFILESFMT	"/proc/%d/map_files/%" PRIx64 "-%" PRIx64
 #define PROCMEMFMT	"/proc/%d/mem"
 #define PROCAUXVFMT	"/proc/%d/auxv"
 #define PROCEXEFMT	"/proc/%d/exe"
@@ -176,7 +177,26 @@ proc_maps_report (Dwfl *dwfl, FILE *f, GElf_Addr sysinfo_ehdr, pid_t pid)
   unsigned int last_dmajor = -1, last_dminor = -1;
   uint64_t last_ino = -1;
   char *last_file = NULL;
-  Dwarf_Addr low = 0, high = 0;
+  // LOW-HIGH is cumulative range for all lines of the current filename.
+  // HIGH_START-HIGH is range of only the very last PROCMAPSFMT line.
+  Dwarf_Addr low = 0, high_start = 0, high = 0;
+
+  inline char *map_files_name (void)
+    {
+      static int map_files_failed = -1;
+      if (map_files_failed > 0)
+	return NULL;
+      char *map_fname;
+      if (asprintf (&map_fname, PROCMAPFILESFMT, pid, high_start, high) < 0)
+	return NULL;
+      if (map_files_failed == 0)
+	return map_fname;
+      map_files_failed = access (map_fname, R_OK) != 0;
+      if (! map_files_failed)
+	return map_fname;
+      free (map_fname);
+      return NULL;
+    }
 
   inline bool report (void)
     {
@@ -188,6 +208,9 @@ proc_maps_report (Dwfl *dwfl, FILE *f, GElf_Addr sysinfo_ehdr, pid_t pid)
 	  last_file = NULL;
 	  if (unlikely (mod == NULL))
 	    return true;
+	  char *map_fname = map_files_name ();
+	  if (map_fname != NULL)
+	    mod->main.name = map_fname;
 	}
       return false;
     }
@@ -224,7 +247,7 @@ proc_maps_report (Dwfl *dwfl, FILE *f, GElf_Addr sysinfo_ehdr, pid_t pid)
 	      return -1;
 	    }
 
-	  low = start;
+	  low = high_start = start;
 	  high = end;
 	  if (asprintf (&last_file, "[vdso: %d]", (int) pid) < 0
 	      || report ())
@@ -241,6 +264,7 @@ proc_maps_report (Dwfl *dwfl, FILE *f, GElf_Addr sysinfo_ehdr, pid_t pid)
 	{
 	  /* This is another portion of the same file's mapping.  */
 	  assert (!strcmp (last_file, file));
+	  high_start = start;
 	  high = end;
 	}
       else
@@ -248,7 +272,7 @@ proc_maps_report (Dwfl *dwfl, FILE *f, GElf_Addr sysinfo_ehdr, pid_t pid)
 	  /* This is a different file mapping.  Report the last one.  */
 	  if (report ())
 	    goto bad_report;
-	  low = start;
+	  low = high_start = start;
 	  high = end;
 	  last_file = strdup (file);
 	  last_ino = ino;
