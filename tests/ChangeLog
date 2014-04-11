@@ -1,3 +1,13 @@
+2014-04-11  Mark Wielaard  <mjw@redhat.com>
+
+	* Makefile.am (AM_CPPFLAGS): Add -I libdwelf.
+	(check_PROGRAMS): Add debuglink.
+	(TESTS): Add run-debuglink.sh
+	(EXTRA_DIST): Likewise.
+	(debuglink_LDADD): New.
+	* debuglink.c: New file.
+	* run-debuglink.sh: Likewise.
+
 2014-04-09  Mark Wielaard  <mjw@redhat.com>
 
 	* run-readelf-zdebug.sh: New test.

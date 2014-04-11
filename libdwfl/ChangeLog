@@ -1,3 +1,10 @@
+2014-04-11  Mark Wielaard  <mjw@redhat.com>
+
+	* Makefile.am (AM_CPPFLAGS): Add libdwelf.
+	* libdwflP.h: Include libdwelfP.h.
+	* dwfl_module_getdwarf.c (find_debuglink): Moved to libdwelf.
+	(find_debuginfo): Use dwelf_elf_gnu_debuglink.
+
 2014-03-03  Mark Wielaard  <mjw@redhat.com>
 
 	* elf-from-memory.c (elf_from_remote_memory): Keep track of

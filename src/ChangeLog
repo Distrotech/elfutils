@@ -1,3 +1,7 @@
+2014-04-11  Mark Wielaard  <mjw@redhat.com>
+
+	* Makefile.am (AM_CPPFLAGS): Add -I libdwelf.
+
 2014-04-09  Mark Wielaard  <mjw@redhat.com>
 
 	* readelf.c (print_debug_aranges_section): Don't get the raw section
