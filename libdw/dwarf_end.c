@@ -92,6 +92,7 @@ dwarf_end (dwarf)
 	 to be handled.  */
       tdestroy (dwarf->cu_tree, cu_free);
       tdestroy (dwarf->tu_tree, cu_free);
+      tdestroy (dwarf->macro_ops, noop_free);
 
       struct libdw_memblock *memp = dwarf->mem_tail;
       /* The first block is allocated together with the Dwarf object.  */

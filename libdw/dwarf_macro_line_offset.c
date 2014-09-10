@@ -1,5 +1,5 @@
-/* Return first macro parameter.
-   Copyright (C) 2005, 2014 Red Hat, Inc.
+/* Return .debug_line offset associated with given macro.
+   Copyright (C) 2014 Red Hat, Inc.
    This file is part of elfutils.
    Written by Ulrich Drepper <drepper@redhat.com>, 2005.
 
@@ -35,14 +35,11 @@
 
 
 int
-dwarf_macro_param1 (Dwarf_Macro *macro, Dwarf_Word *paramp)
+dwarf_macro_line_offset (Dwarf_Macro *macro, Dwarf_Off *offp)
 {
   if (macro == NULL)
     return -1;
 
-  Dwarf_Attribute param;
-  if (dwarf_macro_param (macro, 1, &param) != 0)
-    return -1;
-
-  return dwarf_formudata (&param, paramp);
+  *offp = macro->line_offset;
+  return 0;
 }

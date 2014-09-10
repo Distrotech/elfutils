@@ -118,7 +118,8 @@ enum
   DWARF_E_INVALID_OFFSET,
   DWARF_E_NO_DEBUG_RANGES,
   DWARF_E_INVALID_CFI,
-  DWARF_E_NO_ALT_DEBUGLINK
+  DWARF_E_NO_ALT_DEBUGLINK,
+  DWARF_E_INVALID_OPCODE,
 };
 
 
@@ -166,6 +167,9 @@ struct Dwarf
   void *tu_tree;
   Dwarf_Off next_tu_offset;
   Dwarf_Sig8_Hash sig8_hash;
+
+  /* Search tree for .debug_macro operator tables.  */
+  void *macro_ops;
 
   /* Address ranges.  */
   Dwarf_Aranges *aranges;
@@ -326,16 +330,48 @@ struct Dwarf_CU
    })									      \
 
 
-/* Macro information.  */
+/* Prototype of a single .debug_macro operator.  */
+typedef struct
+{
+  Dwarf_Word nforms;
+  unsigned char const *forms;
+} Dwarf_Macro_Op_Proto;
+
+/* Prototype table.  */
+typedef struct
+{
+  /* Offset of .debug_macro section.  */
+  Dwarf_Off offset;
+
+  /* Offset of associated .debug_line section.  */
+  Dwarf_Off line_offset;
+
+  /* How far have we read in this section.  This starts as 0 and is
+     increased as the section is worked through.  */
+  Dwarf_Off read;
+
+  /* Header length.  */
+  Dwarf_Half header_len;
+
+  uint16_t version;
+  bool is_64bit;
+
+  /* Shows where in TABLE each opcode is defined.  Since opcode 0 is
+     never used, it stores index of opcode X in X-1'th element.  The
+     value of 0xff means not stored at all.  */
+  unsigned char opcodes[255];
+
+  /* Individual opcode prototypes.  */
+  Dwarf_Macro_Op_Proto table[];
+} Dwarf_Macro_Op_Table;
+
 struct Dwarf_Macro_s
 {
-  unsigned int opcode;
-  Dwarf_Word param1;
-  union
-  {
-    Dwarf_Word u;
-    const char *s;
-  } param2;
+  Dwarf_Off line_offset;
+  Dwarf_Word nargs;
+  uint16_t version;
+  uint8_t opcode;
+  Dwarf_Attribute *attributes;
 };
 
 
